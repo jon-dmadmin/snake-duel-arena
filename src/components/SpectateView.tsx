@@ -105,7 +105,7 @@ export function SpectateView() {
           SCORE: {gameState.score}
         </div>
 
-        <GameCanvas gameState={gameState} cellSize={20} />
+        <GameCanvas gameState={gameState} cellSize={25} />
 
         <p className="text-muted-foreground text-sm">
           Watching AI simulate {selectedPlayer.username}'s gameplay

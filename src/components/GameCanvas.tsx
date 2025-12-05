@@ -6,7 +6,7 @@ interface GameCanvasProps {
   cellSize?: number;
 }
 
-export function GameCanvas({ gameState, cellSize = 20 }: GameCanvasProps) {
+export function GameCanvas({ gameState, cellSize = 25 }: GameCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const { snake, food, gridSize, mode } = gameState;
   const canvasSize = gridSize * cellSize;
@@ -22,9 +22,9 @@ export function GameCanvas({ gameState, cellSize = 20 }: GameCanvasProps) {
     ctx.fillStyle = 'hsl(220, 20%, 6%)';
     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-    // Draw grid
-    ctx.strokeStyle = 'hsl(220, 20%, 12%)';
-    ctx.lineWidth = 0.5;
+    // Draw grid (more pronounced)
+    ctx.strokeStyle = 'hsl(220, 20%, 14%)';
+    ctx.lineWidth = 1;
     for (let i = 0; i <= gridSize; i++) {
       ctx.beginPath();
       ctx.moveTo(i * cellSize, 0);

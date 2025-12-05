@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Inter:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&display=swap');
 
 @layer base {
   :root {
@@ -70,11 +70,11 @@
   }
 
   .font-pixel {
-    font-family: 'Press Start 2P', cursive;
+    font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   }
 
   .font-sans {
-    font-family: 'Inter', sans-serif;
+    font-family: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, monospace;
   }
 }
 
@@ -101,9 +101,9 @@
 
   .game-grid-pattern {
     background-image: 
-      linear-gradient(hsl(var(--grid)) 1px, transparent 1px),
-      linear-gradient(90deg, hsl(var(--grid)) 1px, transparent 1px);
-    background-size: 20px 20px;
+      linear-gradient(hsl(var(--grid)) 2px, transparent 2px),
+      linear-gradient(90deg, hsl(var(--grid)) 2px, transparent 2px);
+    background-size: 25px 25px;
   }
 
   @keyframes pulse-glow {

@@ -154,7 +154,7 @@ export function SnakeGame({ initialMode = 'walls', isSpectateMode = false, spect
 
       {/* Game canvas */}
       <div className="relative">
-        <GameCanvas gameState={gameState} cellSize={20} />
+        <GameCanvas gameState={gameState} cellSize={25} />
         
         {/* Overlay for game states */}
         {gameState.status === 'idle' && !isSpectateMode && (
