@@ -123,8 +123,9 @@ export function tick(state: GameState): GameState {
     return { ...state, status: 'game-over' };
   }
 
-  // Check self collision
-  if (checkSelfCollision(newHead, state.snake)) {
+  // Check self collision: moving into any existing segment (including tail)
+  // should end the game for this implementation.
+  if (state.snake.some(segment => segment.x === newHead.x && segment.y === newHead.y)) {
     return { ...state, status: 'game-over' };
   }
 
