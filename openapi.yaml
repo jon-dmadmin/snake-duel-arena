@@ -1,0 +1,501 @@
+openapi: 3.0.3
+info:
+  title: Snake Duel Arena API
+  description: |
+    API specification for Snake Duel Arena game backend.
+    Supports user authentication, leaderboard management, and real-time spectating.
+  version: 1.0.0
+  contact:
+    name: Snake Duel Arena Team
+servers:
+  - url: http://localhost:3000/api
+    description: Development server
+  - url: https://api.snakeduelarena.com
+    description: Production server
+
+paths:
+  /auth/login:
+    post:
+      summary: User login
+      operationId: loginUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/signup:
+    post:
+      summary: User registration
+      operationId: signupUser
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Account created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '400':
+          description: Invalid input or duplicate email/username
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/logout:
+    post:
+      summary: User logout
+      operationId: logoutUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Logout successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/me:
+    get:
+      summary: Get current authenticated user
+      operationId: getCurrentUser
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Current user data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /leaderboard:
+    get:
+      summary: Get leaderboard entries
+      operationId: getLeaderboard
+      tags:
+        - Leaderboard
+      parameters:
+        - name: mode
+          in: query
+          description: Filter by game mode
+          required: false
+          schema:
+            type: string
+            enum:
+              - walls
+              - pass-through
+        - name: limit
+          in: query
+          description: Maximum number of entries to return
+          required: false
+          schema:
+            type: integer
+            default: 100
+            minimum: 1
+            maximum: 1000
+        - name: offset
+          in: query
+          description: Number of entries to skip
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+      responses:
+        '200':
+          description: Leaderboard entries
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  entries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/LeaderboardEntry'
+                  total:
+                    type: integer
+                    description: Total number of entries
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /leaderboard/submit:
+    post:
+      summary: Submit a game score
+      operationId: submitScore
+      tags:
+        - Leaderboard
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ScoreSubmission'
+      responses:
+        '200':
+          description: Score submitted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  rank:
+                    type: integer
+                    description: Player's rank on the leaderboard for this mode
+                  previousBest:
+                    type: integer
+                    description: Player's previous best score in this mode
+        '401':
+          description: Not authenticated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '400':
+          description: Invalid score submission
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /spectate/players:
+    get:
+      summary: Get list of currently active players
+      operationId: getActivePlayers
+      tags:
+        - Spectate
+      parameters:
+        - name: mode
+          in: query
+          description: Filter by game mode
+          required: false
+          schema:
+            type: string
+            enum:
+              - walls
+              - pass-through
+      responses:
+        '200':
+          description: List of active players
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  players:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ActivePlayer'
+                  timestamp:
+                    type: string
+                    format: date-time
+
+  /spectate/players/{playerId}:
+    get:
+      summary: Get active player details and game state
+      operationId: getPlayerStream
+      tags:
+        - Spectate
+      parameters:
+        - name: playerId
+          in: path
+          required: true
+          description: ID of the player to spectate
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Player's current game state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActivePlayer'
+        '404':
+          description: Player not found or no longer active
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      summary: Health check endpoint
+      operationId: healthCheck
+      tags:
+        - System
+      responses:
+        '200':
+          description: Server is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    enum:
+                      - ok
+                  timestamp:
+                    type: string
+                    format: date-time
+                  version:
+                    type: string
+
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+        username:
+          type: string
+          description: Display name
+          minLength: 1
+          maxLength: 50
+        email:
+          type: string
+          format: email
+        createdAt:
+          type: string
+          format: date-time
+      required:
+        - id
+        - username
+        - email
+        - createdAt
+
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: User email address
+        password:
+          type: string
+          minLength: 6
+          description: User password
+      required:
+        - email
+        - password
+
+    SignupRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email address for new account
+        username:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Display name
+        password:
+          type: string
+          minLength: 6
+          description: Account password
+      required:
+        - email
+        - username
+        - password
+
+    AuthResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        user:
+          $ref: '#/components/schemas/User'
+        token:
+          type: string
+          description: JWT authentication token
+        error:
+          type: string
+          description: Error message if unsuccessful
+      required:
+        - success
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique entry identifier
+        username:
+          type: string
+          description: Player name
+        score:
+          type: integer
+          minimum: 0
+          description: Final score
+        mode:
+          type: string
+          enum:
+            - walls
+            - pass-through
+          description: Game mode played
+        date:
+          type: string
+          format: date-time
+          description: When score was achieved
+        rank:
+          type: integer
+          minimum: 1
+          description: Current rank (optional, set by server)
+      required:
+        - id
+        - username
+        - score
+        - mode
+        - date
+
+    ScoreSubmission:
+      type: object
+      properties:
+        score:
+          type: integer
+          minimum: 0
+          maximum: 999999
+          description: Final game score
+        mode:
+          type: string
+          enum:
+            - walls
+            - pass-through
+          description: Game mode that was played
+        duration:
+          type: integer
+          description: Game duration in seconds (optional)
+      required:
+        - score
+        - mode
+
+    ActivePlayer:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Unique player session identifier
+        username:
+          type: string
+          description: Player name
+        score:
+          type: integer
+          minimum: 0
+          description: Current game score
+        mode:
+          type: string
+          enum:
+            - walls
+            - pass-through
+          description: Game mode being played
+        startedAt:
+          type: string
+          format: date-time
+          description: When the game started
+        status:
+          type: string
+          enum:
+            - idle
+            - playing
+            - paused
+            - game-over
+          description: Current game status
+      required:
+        - id
+        - username
+        - score
+        - mode
+        - startedAt
+
+    ErrorResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: string
+          description: Error message
+        code:
+          type: string
+          description: Error code for client handling
+      required:
+        - success
+        - error
+
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+tags:
+  - name: Authentication
+    description: User login, signup, and session management
+  - name: Leaderboard
+    description: Game scores and ranking system
+  - name: Spectate
+    description: Real-time spectating of active players
+  - name: System
+    description: System health and status endpoints
